@@ -17,7 +17,6 @@ class Menu(Base):
     food_id = Column(Integer, nullable=True)
 
 
-
 class MainMenu(Base):
     __tablename__ = 'main_menu'
 
@@ -27,4 +26,4 @@ class MainMenu(Base):
     price = Column(String(300), nullable=True)
 
 
-
+Base.metadata.create_all(engine)

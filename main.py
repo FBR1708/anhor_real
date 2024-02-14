@@ -9,7 +9,7 @@ from rus_language.menu_rus import kril_menu, check_cart_ru, inline_button_food_r
 from uzb_language.menu_uzb import start, check_cart, clear_cart, lotin_menu, increase_quantity, savat, \
     inline_button_food, Form, phone_number, phone_number1, phone, location, send_group_user_info
 
-Base.metadata.create_all(engine)
+
 
 session = Session()
 
