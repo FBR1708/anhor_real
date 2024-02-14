@@ -1,5 +1,4 @@
-from Token import dp
-from aiogram import types
+import re
 
 from aiogram import types
 from aiogram.dispatcher import FSMContext
@@ -8,16 +7,13 @@ from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMar
 
 from Token import bot
 from database import Session, MainMenu, Menu
-from uzb_language.keyboard_uzb import language, pay, pay1, contact1, user_location, keyboard7, keyboard8
-import re
-
-# Payment_Token = '371317599:TEST:1707458286298'
-# Click_Token = '398062629:TEST:999999999_F91D8F69C042267444B74CC0B3C747757EB0E065'
+from rus_language.keyboard_rus import pay_ru, contact1_ru, user_location_ru, keyboard7_ru
+from uzb_language.keyboard_uzb import language
 
 
-class Form(StatesGroup):
-    phone_number = State()
-    location = State()
+class Form_ru(StatesGroup):
+    phone_number_ru = State()
+    location_ru = State()
 
 
 quantity = 1
@@ -25,55 +21,51 @@ total_amount = 0
 current_product = None
 
 
-async def start(message: types.Message):
-    await message.answer("Тилни танланг  /   Выберите язык", reply_markup=language)
-
-
-async def lotin_menu(message: types.Message):
-    global keyboard
+async def kril_menu(message: types.Message):
+    global keyboard1
     db = Session()
     food_items = db.query(MainMenu).all()
     db.close()
-    keyboard = ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True, row_width=2)
-    keyboard.add(KeyboardButton(text='⬅Ortga'))
-    keyboard.add(KeyboardButton(text='Savat🧺'))
+    keyboard1 = ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True, row_width=2)
+    keyboard1.add(KeyboardButton(text='⬅Назад'))
+    keyboard1.add(KeyboardButton(text='Корзина🧺'))
     buttons = [KeyboardButton(text=food_item.name) for food_item in food_items]
     for i in range(0, len(buttons), 2):
         row = buttons[i:i + 2]
-        keyboard.add(*row)
+        keyboard1.add(*row)
 
-    await message.answer("Nima buyurtma qilasiz?", reply_markup=keyboard)
+    await message.answer("Что вы заказываете?", reply_markup=keyboard1)
 
 
-async def update_inline_keyboard(callback_query):
+async def update_inline_keyboard_ru(callback_query: types.CallbackQuery):
     global quantity, total_amount, current_product
 
-    ikm = InlineKeyboardMarkup()
-    ikm.add(
-        InlineKeyboardButton("+", callback_data='increase_quantity'),
-        InlineKeyboardButton(str(quantity), callback_data='quantity'),
-        InlineKeyboardButton("-", callback_data='decrease_quantity'),
-        InlineKeyboardButton(f"{total_amount} sum", callback_data='summa'),
-        InlineKeyboardButton("Savatga 📩", callback_data='savat')
+    ikm1 = InlineKeyboardMarkup()
+    ikm1.add(
+        InlineKeyboardButton("+", callback_data='increase_quantity_ru'),
+        InlineKeyboardButton(str(quantity), callback_data='quantity_ru'),
+        InlineKeyboardButton("-", callback_data='decrease_quantity_ru'),
+        InlineKeyboardButton(f"{total_amount} sum", callback_data='summa_ru'),
+        InlineKeyboardButton("В корзину 📩", callback_data='savat_ru')
     )
 
-    if callback_query.message.reply_markup != ikm:
+    if callback_query.message.reply_markup != ikm1:
         await bot.edit_message_reply_markup(
             chat_id=callback_query.message.chat.id,
             message_id=callback_query.message.message_id,
-            reply_markup=ikm
+            reply_markup=ikm1
         )
 
 
-async def increase_quantity(callback_query: types.CallbackQuery):
+async def increase_quantity_ru(callback_query: types.CallbackQuery):
     global quantity, total_amount, current_product
     try:
         data = callback_query.data
         global db
         db = Session()
-        if data == 'increase_quantity':
+        if data == 'increase_quantity_ru':
             quantity += 1
-        elif data == 'decrease_quantity' and quantity > 1:
+        elif data == 'decrease_quantity_ru' and quantity > 1:
             quantity -= 1
         else:
             food_item = db.query(Menu).filter(Menu.callback_data == data).first()
@@ -81,7 +73,7 @@ async def increase_quantity(callback_query: types.CallbackQuery):
                 current_product = food_item
                 quantity = 1
         total_amount = int(quantity) * int(current_product.price) if current_product else current_product.price
-        await update_inline_keyboard(callback_query)
+        await update_inline_keyboard_ru(callback_query)
 
     finally:
         db.close()
@@ -90,14 +82,14 @@ async def increase_quantity(callback_query: types.CallbackQuery):
 user_carts = {}
 
 
-async def check_cart(chat_id):
+async def check_cart_ru(chat_id):
     if chat_id not in user_carts or not user_carts[chat_id]:
-        await bot.send_message(chat_id, "Savat bo'sh. Sizda buyurtma mavjud emas.")
+        await bot.send_message(chat_id, "Корзина пуста. У вас нет заказа.")
         return
 
     global total_cart_amount
     total_cart_amount = 0
-    message = "Savatchadagi mahsulotlar:\n\n"
+    message = "Товары в корзине:\n\n"
 
     global product_name, quantity, price, amount, index
     for index, item in enumerate(user_carts[chat_id], start=1):
@@ -106,14 +98,14 @@ async def check_cart(chat_id):
         price = item['price']
         amount = item['amount']
 
-        message += f"{index}. {product_name}\nMiqdor: {quantity} dona \nNarxi: {price} sum \nJami: {amount} sum\n\n"
+        message += f"{index}. {product_name}\nКоличество: {quantity} dona \nЦена: {price} sum \nОбщая сумма: {amount}  сум\n\n"
         total_cart_amount += amount
 
-    message += f"\nJami savatcha summasi: {total_cart_amount} sum"
-    await bot.send_message(chat_id, message, reply_markup=pay)
+    message += f"\nОбщая сумма корзины: {total_cart_amount} сум"
+    await bot.send_message(chat_id, message, reply_markup=pay_ru)
 
 
-async def savat(callback_query: types.CallbackQuery):
+async def savat_ru(callback_query: types.CallbackQuery):
     try:
         chat_id = callback_query.message.chat.id
 
@@ -135,13 +127,15 @@ async def savat(callback_query: types.CallbackQuery):
             quantity = 1
             total_amount = 0
 
-            await update_inline_keyboard(callback_query)
-            await bot.send_message(chat_id, text="Mahsulot qoshildi", reply_markup=keyboard)
+            await update_inline_keyboard_ru(callback_query)
+            await bot.send_message(chat_id, text="Товар добавлен.", reply_markup=keyboard1)
+            message_id_to_delete = callback_query.message.message_id
+            await bot.delete_message(chat_id=chat_id, message_id=message_id_to_delete)
     finally:
         db.close()
 
 
-async def inline_button_food(message: types.Message):
+async def inline_button_food_ru(message: types.Message):
     main_menu_name = message.text
     db = Session()
     try:
@@ -156,8 +150,7 @@ async def inline_button_food(message: types.Message):
                         callback_data = food_item.callback_data
                         reply_markup.add(InlineKeyboardButton(text=button_text, callback_data=callback_data))
 
-                    with open(f'foods_images/{menu.image_name}.jpg', 'rb') as photo:
-                        await bot.send_photo(message.chat.id, InputFile(photo), reply_markup=reply_markup)
+                    await bot.send_photo(message.chat.id, photo=menu.food_picture, reply_markup=reply_markup)
                 else:
                     await message.answer("No food items found for the selected MainMenu.")
         else:
@@ -167,37 +160,33 @@ async def inline_button_food(message: types.Message):
         db.close()
 
 
-async def phone(message: types.Message):
+async def phone_ru(message: types.Message):
     if message.chat.type != types.ChatType.PRIVATE:
-        await message.answer("Telefon raqamini faqat shaxsiy chatlarda so'rash mumkin.")
+        await message.answer("Номер телефона можно запросить только в приватных чатах.")
         return
-    # global xz_turi
-    # xz_turi = message.text
-    # async with state.proxy() as data:
-    #     data['pay_type'] = message.text
     await message.answer(
-        "Telefon raqamingizni pastdagi tugma orqali kiriting. Yoki shablon orqali  kiriting:\n M-n:  +998 XX XXX XX XX",
-        reply_markup=contact1)
-    await Form.phone_number.set()
+        "Введите свой номер телефона, используя кнопку ниже. Или введите через шаблон:\n Например:  +998 XX XXX XX XX",
+        reply_markup=contact1_ru)
+    await Form_ru.phone_number_ru.set()
 
 
-async def phone_number(message: types.Message, state: FSMContext):
+async def phone_number_ru(message: types.Message, state: FSMContext):
     async with state.proxy() as data:
-        data['phone_number'] = message.contact.phone_number
-    await Form.next()
-    await message.answer('Manzilni jo\'nating', reply_markup=user_location)
+        data['phone_number_ru'] = message.contact.phone_number
+    await Form_ru.next()
+    await message.answer('Отправить адрес', reply_markup=user_location_ru)
 
 
-async def phone_number1(message: types.Message, state: FSMContext):
+async def phone_number1_ru(message: types.Message, state: FSMContext):
     async with state.proxy() as data:
         phone_number = message.text
         if validate_phone_number(phone_number):
-            data['phone_number'] = phone_number
+            data['phone_number_ru'] = phone_number
         else:
-            await message.answer("Noto'g'ri formatdagi telefon raqamini kiritdingiz. Iltimos, qaytadan kiriting.")
+            await message.answer("Вы ввели номер телефона в неправильном формате. Пожалуйста, войдите еще раз.")
             return
-    await Form.next()
-    await message.answer('Manzilni jo\'nating', reply_markup=user_location)
+    await Form_ru.next()
+    await message.answer('Отправить адрес', reply_markup=user_location_ru)
 
 
 def validate_phone_number(phone_number):
@@ -209,58 +198,26 @@ def validate_phone_number(phone_number):
         return False
 
 
-# async def product(message: types.Message):
-#     if Payment_Token.split(':')[1] == 'TEST':
-#         PRICE = types.LabeledPrice(label="Umumiy summa", amount=total_cart_amount * 100)
-#         await bot.send_invoice(
-#             chat_id=message.chat.id,
-#             title='Buyurtmangizdan mamnunmiz!',
-#             description="Payment to\'lov tizimi",
-#             provider_token=Payment_Token,
-#             currency="UZS",
-#             prices=[PRICE],
-#             start_parameter="one-month-subscription",
-#             payload="test-invoice-payload"
-#         )
-
-
-# async def sddd(message: types.Message):
-#     payment_info = message.successful_payment.to_python()
-#     for k, x in payment_info.items():
-#         print(k, x)
-#         await bot.send_message(message.chat.id, f"Shunchaki foidanaluvchi uchun tolandi qismi...")
-#         # await bot.send_message(config.ADMINS[0], f"To'langandan so'ng adminga habar yuborish uchun...")
-
-
-async def location(message: types.Message, state: FSMContext):
+async def location_ru(message: types.Message, state: FSMContext):
     global loc, user_id, loc1, v, user_phone
     loc = message.location
     user_id = message.chat.id
     loc1 = message.message_id
     async with state.proxy() as data:
-        data['location'] = message.location
-    user_phone = data['phone_number']
-    v = f"🛑 To\'lov  turi: Naqd\n 🛑 Telefon raqam  :   {data['phone_number']}\n\n🛑 Ma'lumotlar to'g'riligini tekshiring va pastdagi tugma orqali tasdiqlang."
-    await bot.send_message(user_id, v, reply_markup=keyboard7)
+        data['location_ru'] = message.location
+    user_phone = data['phone_number_ru']
+    v = f"🛑 Тип оплаты: Наличные\n 🛑 Номер телефона  :   {data['phone_number_ru']}\n\n🛑 Проверьте правильность информации и подтвердите ее кнопкой ниже."
+    await bot.send_message(user_id, v, reply_markup=keyboard7_ru)
     await state.finish()
 
-    # elif xz_turi == 'Click':
-    #     async with state.proxy() as data:
-    #         data['location'] = message.location
-    #     user_id = message.chat.id
-    #     pay_type = data['pay_type']
-    #     v1 = f"🛑 To\'lov  turi: {pay_type}\n 🛑 Telefon raqam  :   {data['phone_number']}\n\n🛑 Ma'lumotlar to'g'riligini tekshiring va pastdagi tugma orqali tasdiqlang."
-    #     await bot.send_message(user_id, v1, reply_markup=keyboard8)
-    #     await state.finish()
 
-
-async def clear_cart(message: types.Message, chat_id: int):
+async def clear_cart_ru(message: types.Message, chat_id: int):
     if chat_id in user_carts:
         del user_carts[chat_id]
-    await message.answer("Savat tozalandi.", reply_markup=pay)
+    await message.answer("Корзина очищена.", reply_markup=pay_ru)
 
 
-async def send_group_user_info(message: types.Message, state: FSMContext):
+async def send_group_user_info_ru(message: types.Message, state: FSMContext):
     user_informations = "Mijoz buyurtmalari:\n\n"
     chat_id = message.chat.id
     for index, item in enumerate(user_carts[chat_id], start=1):
@@ -275,13 +232,9 @@ async def send_group_user_info(message: types.Message, state: FSMContext):
     guruh_chat_id = -1002119431034
     await bot.send_location(guruh_chat_id, loc.latitude, loc.longitude)
     await bot.send_message(chat_id=guruh_chat_id, text=user_informations)
-    await message.answer('Ma\'lumotlar adminga yuborildi tez orada siz bilan aloqaga chiqishadi',
+    await message.answer('Информация отправлена администратору, они свяжутся с вами в ближайшее время',
                          reply_markup=language)
     chat_id = message.chat.id
     if chat_id in user_carts:
         del user_carts[chat_id]
     await state.finish()
-
-
-# async def pay1_button(message: types.Message):
-#     await message.answer(text='To\'lovni qaysi turda amalga oshirmoqchisiz?', reply_markup=pay1)

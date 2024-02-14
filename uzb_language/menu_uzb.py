@@ -8,6 +8,7 @@ from database import Session, MainMenu, Menu
 from uzb_language.keyboard_uzb import language, pay, pay1, contact1, user_location, keyboard7, keyboard8
 import re
 
+
 # Payment_Token = '371317599:TEST:1707458286298'
 # Click_Token = '398062629:TEST:999999999_F91D8F69C042267444B74CC0B3C747757EB0E065'
 
@@ -134,6 +135,8 @@ async def savat(callback_query: types.CallbackQuery):
 
             await update_inline_keyboard(callback_query)
             await bot.send_message(chat_id, text="Mahsulot qoshildi", reply_markup=keyboard)
+            await bot.delete_message(chat_id=callback_query.message.chat.id,
+                                     message_id=callback_query.message.message_id)
     finally:
         db.close()
 
@@ -153,8 +156,7 @@ async def inline_button_food(message: types.Message):
                         callback_data = food_item.callback_data
                         reply_markup.add(InlineKeyboardButton(text=button_text, callback_data=callback_data))
 
-                    with open(f'foods_images/{menu.image_name}.jpg', 'rb') as photo:
-                        await bot.send_photo(message.chat.id, InputFile(photo), reply_markup=reply_markup)
+                    await bot.send_photo(message.chat.id, photo=menu.food_picture, reply_markup=reply_markup)
                 else:
                     await message.answer("No food items found for the selected MainMenu.")
         else:
@@ -269,7 +271,7 @@ async def send_group_user_info(message: types.Message, state: FSMContext):
     user_informations += f"\n🛑 Jami summasi: {total_cart_amount} sum\n"
     user_detail = f"🛑 To\'lov  turi: Naqd\n🛑 Telefon raqam: {user_phone}"
     user_informations += user_detail
-    guruh_chat_id = -1002119431034
+    guruh_chat_id = -1002008691273
     await bot.send_location(guruh_chat_id, loc.latitude, loc.longitude)
     await bot.send_message(chat_id=guruh_chat_id, text=user_informations)
     await message.answer('Ma\'lumotlar adminga yuborildi tez orada siz bilan aloqaga chiqishadi',
@@ -278,7 +280,6 @@ async def send_group_user_info(message: types.Message, state: FSMContext):
     if chat_id in user_carts:
         del user_carts[chat_id]
     await state.finish()
-
 
 # async def pay1_button(message: types.Message):
 #     await message.answer(text='To\'lovni qaysi turda amalga oshirmoqchisiz?', reply_markup=pay1)
