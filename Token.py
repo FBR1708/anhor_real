@@ -8,3 +8,12 @@ from aiogram.contrib.middlewares.logging import LoggingMiddleware
 bot = Bot(token=Token)
 dp = Dispatcher(bot, storage=MemoryStorage())
 dp.middleware.setup(LoggingMiddleware())
+
+
+
+
+
+
+
+
+
