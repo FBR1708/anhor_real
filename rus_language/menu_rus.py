@@ -229,7 +229,7 @@ async def send_group_user_info_ru(message: types.Message, state: FSMContext):
     user_informations += f"\n🛑 Jami summasi: {total_cart_amount} sum\n"
     user_detail = f"🛑 To\'lov  turi: Naqd\n🛑 Telefon raqam: {user_phone}"
     user_informations += user_detail
-    guruh_chat_id = -1002119431034
+    guruh_chat_id = -1002008691273
     await bot.send_location(guruh_chat_id, loc.latitude, loc.longitude)
     await bot.send_message(chat_id=guruh_chat_id, text=user_informations)
     await message.answer('Информация отправлена администратору, они свяжутся с вами в ближайшее время',
