@@ -3,13 +3,12 @@ from aiogram.dispatcher import FSMContext
 from aiogram.utils import executor
 
 from Token import dp
-from database import Session, Base, engine
+from database import Session
 from rus_language.menu_rus import kril_menu, check_cart_ru, inline_button_food_ru, phone_ru, clear_cart_ru, \
-    send_group_user_info_ru, phone_number_ru, phone_number1_ru, location_ru, increase_quantity_ru, savat_ru, Form_ru
+    send_group_user_info_ru, phone_number_ru, phone_number1_ru, location_ru, increase_quantity_ru, savat_ru, Form_ru, \
+    on_inline_button_click_ru
 from uzb_language.menu_uzb import start, check_cart, clear_cart, lotin_menu, increase_quantity, savat, \
-    inline_button_food, Form, phone_number, phone_number1, phone, location, send_group_user_info
-
-
+    inline_button_food, Form, phone_number, phone_number1, phone, location, send_group_user_info, on_inline_button_click
 
 session = Session()
 
@@ -33,7 +32,8 @@ async def handle_message(message: types.Message):
     await kril_menu(message)
 
 
-@dp.callback_query_handler(lambda query: True and query.data != 'savat' and query.data != 'savat_ru')
+@dp.callback_query_handler(
+    lambda query: True and query.data != 'savat' and query.data != 'savat_ru' and query.data != 'ortga' and query.data != 'ortga_ru')
 async def handle_inline_btn_and_food_sum(callback_query: types.CallbackQuery):
     if lang == '🇺🇿 Uzbek':
         await increase_quantity(callback_query)
@@ -61,9 +61,13 @@ async def handle_message(message: types.Message):
                                                   'Savatni tozalash', 'Click', 'Naqd', '🔚Ortga', 'Manzilni yuborish',
                                                   'Tasdiqlash', 'O\'zgartirish', 'To\'lovni amalga oshirish',
                                                   'Корзина🧺', '🔙Назад', '⬅Назад', '🔚Назад', 'Обработка заказа',
-                                                  'Очистить корзину', 'Подтверждение', 'Изменять', '🇷🇺 Russia'])
+                                                  'Очистить корзину', 'Подтверждение', 'Изменять', '🇷🇺 Russia',
+                                                  '🇺🇿 Uzbek'])
 async def handle_message(message: types.Message):
-    await inline_button_food(message)
+    if lang == '🇺🇿 Uzbek':
+        await inline_button_food(message)
+    elif lang == '🇷🇺 Russia':
+        await inline_button_food_ru(message)
 
 
 @dp.message_handler(lambda message: message.text == 'Buyurtmani rasmiylashtirish')
@@ -114,9 +118,6 @@ async def handle_message(message: types.Message):
     await phone(message)
 
 
-
-
-
 @dp.callback_query_handler(lambda query: query.data == 'savat')
 async def handle_message(callback_query: types.CallbackQuery):
     await savat(callback_query)
@@ -125,6 +126,14 @@ async def handle_message(callback_query: types.CallbackQuery):
 @dp.callback_query_handler(lambda query: query.data == 'savat_ru')
 async def handle_message(callback_query: types.CallbackQuery):
     await savat_ru(callback_query)
+
+
+@dp.callback_query_handler(lambda query: query.data in ['ortga', 'ortga_ru'])
+async def handle_message(callback_query: types.CallbackQuery):
+    if callback_query.data == 'ortga':
+        await on_inline_button_click(callback_query)
+    elif callback_query.data == 'ortga_ru':
+        await on_inline_button_click_ru(callback_query)
 
 
 # '================================================================================================================='
@@ -145,14 +154,14 @@ async def handle_message(message: types.Message):
         await check_cart_ru(message.chat.id)
 
 
-@dp.message_handler(
-    lambda message: True and message.text not in ['Savat🧺', 'Buyurtmani rasmiylashtirish', '🔙Ortga', '⬅Ortga',
-                                                  'Savatni tozalash', 'Click', 'Naqd', '🔚Ortga', 'Manzilni yuborish',
-                                                  'Tasdiqlash', 'O\'zgartirish', 'To\'lovni amalga oshirish',
-                                                  'Корзина🧺', '🔙Назад', '⬅Назад', '🔚Назад', 'Обработка заказа',
-                                                  'Очистить корзину', 'Подтверждение', 'Изменять', '🇷🇺 Russia'])
-async def handle_message(message: types.Message):
-    await inline_button_food_ru(message)
+# @dp.message_handler(
+#     lambda message: True and message.text not in ['Savat🧺', 'Buyurtmani rasmiylashtirish', '🔙Ortga', '⬅Ortga',
+#                                                   'Savatni tozalash', 'Click', 'Naqd', '🔚Ortga', 'Manzilni yuborish',
+#                                                   'Tasdiqlash', 'O\'zgartirish', 'To\'lovni amalga oshirish',
+#                                                   'Корзина🧺', '🔙Назад', '⬅Назад', '🔚Назад', 'Обработка заказа',
+#                                                   'Очистить корзину', 'Подтверждение', 'Изменять', '🇷🇺 Russia'])
+# async def handle_message(message: types.Message):
+#     await inline_button_food_ru(message)
 
 
 @dp.message_handler(lambda message: message.text == 'Обработка заказа')
@@ -187,7 +196,6 @@ async def handle_message(message: types.Message, state: FSMContext):
     await send_group_user_info_ru(message, state)
 
 
-
 @dp.message_handler(lambda message: message.text in ['Изменять'])
 async def handle_message(message: types.Message):
     await phone_ru(message)
@@ -212,5 +220,4 @@ async def echo(message: types.Message):
 if __name__ == '__main__':
     executor.start_polling(dp, skip_updates=True)
 
-
-d=5
+d = 5

@@ -5,6 +5,7 @@ from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMar
 
 from Token import bot
 from database import Session, MainMenu, Menu
+from rus_language.menu_rus import kril_menu
 from uzb_language.keyboard_uzb import language, pay, pay1, contact1, user_location, keyboard7, keyboard8
 import re
 
@@ -28,10 +29,10 @@ async def start(message: types.Message):
 
 
 async def lotin_menu(message: types.Message):
-    global keyboard
     db = Session()
     food_items = db.query(MainMenu).all()
     db.close()
+    global keyboard
     keyboard = ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True, row_width=2)
     keyboard.add(KeyboardButton(text='⬅Ortga'))
     keyboard.add(KeyboardButton(text='Savat🧺'))
@@ -41,6 +42,11 @@ async def lotin_menu(message: types.Message):
         keyboard.add(*row)
 
     await message.answer("Nima buyurtma qilasiz?", reply_markup=keyboard)
+
+
+async def on_inline_button_click(callback_query: types.CallbackQuery):
+    if callback_query.data == 'ortga':
+        await lotin_menu(callback_query.message)
 
 
 async def update_inline_keyboard(callback_query):
@@ -156,6 +162,7 @@ async def inline_button_food(message: types.Message):
                         callback_data = food_item.callback_data
                         reply_markup.add(InlineKeyboardButton(text=button_text, callback_data=callback_data))
 
+                    reply_markup.add(InlineKeyboardButton(text='🔙Ortga', callback_data='ortga'))
                     await bot.send_photo(message.chat.id, photo=menu.food_picture, reply_markup=reply_markup)
                 else:
                     await message.answer("No food items found for the selected MainMenu.")
@@ -239,7 +246,7 @@ async def location(message: types.Message, state: FSMContext):
     async with state.proxy() as data:
         data['location'] = message.location
     user_phone = data['phone_number']
-    v = f"🛑 To\'lov  turi: Naqd\n 🛑 Telefon raqam  :   {data['phone_number']}\n\n🛑 Ma'lumotlar to'g'riligini tekshiring va pastdagi tugma orqali tasdiqlang."
+    v = f"🛑 To\'lov  turi: Naqd\n 🛑 Telefon raqam  :   {data['phone_number']}\n 🛑 Yetkazib berish xizmati pullik. \n\n🛑 Ma'lumotlar to'g'riligini tekshiring va pastdagi tugma orqali tasdiqlang."
     await bot.send_message(user_id, v, reply_markup=keyboard7)
     await state.finish()
 

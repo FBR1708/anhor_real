@@ -150,6 +150,7 @@ async def inline_button_food_ru(message: types.Message):
                         callback_data = food_item.callback_data
                         reply_markup.add(InlineKeyboardButton(text=button_text, callback_data=callback_data))
 
+                    reply_markup.add(InlineKeyboardButton(text='🔙Назад', callback_data='ortga_ru'))
                     await bot.send_photo(message.chat.id, photo=menu.food_picture, reply_markup=reply_markup)
                 else:
                     await message.answer("No food items found for the selected MainMenu.")
@@ -158,6 +159,11 @@ async def inline_button_food_ru(message: types.Message):
 
     finally:
         db.close()
+
+
+async def on_inline_button_click_ru(callback_query: types.CallbackQuery):
+    if callback_query.data == 'ortga_ru':
+        await kril_menu(callback_query.message)
 
 
 async def phone_ru(message: types.Message):
@@ -206,7 +212,7 @@ async def location_ru(message: types.Message, state: FSMContext):
     async with state.proxy() as data:
         data['location_ru'] = message.location
     user_phone = data['phone_number_ru']
-    v = f"🛑 Тип оплаты: Наличные\n 🛑 Номер телефона  :   {data['phone_number_ru']}\n\n🛑 Проверьте правильность информации и подтвердите ее кнопкой ниже."
+    v = f"🛑 Тип оплаты: Наличные\n 🛑 Номер телефона  :   {data['phone_number_ru']}\n 🛑 Услуга доставки платная.\n\n🛑 Проверьте правильность информации и подтвердите ее кнопкой ниже."
     await bot.send_message(user_id, v, reply_markup=keyboard7_ru)
     await state.finish()
 
