@@ -152,6 +152,7 @@ async def inline_button_food(message: types.Message):
     db = Session()
     try:
         main_menu = db.query(MainMenu).filter(MainMenu.name == main_menu_name).all()
+        print(main_menu)
         if main_menu:
             for menu in main_menu:
                 food_items = db.query(Menu).filter(Menu.food_id == menu.id).all()

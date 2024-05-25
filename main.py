@@ -1,8 +1,9 @@
 from aiogram import types
 from aiogram.dispatcher import FSMContext
+from aiogram.types import ReplyKeyboardRemove
 from aiogram.utils import executor
 
-from Token import dp
+from Token import dp, bot
 from database import Session
 from rus_language.menu_rus import kril_menu, check_cart_ru, inline_button_food_ru, phone_ru, clear_cart_ru, \
     send_group_user_info_ru, phone_number_ru, phone_number1_ru, location_ru, increase_quantity_ru, savat_ru, Form_ru, \
@@ -16,6 +17,9 @@ session = Session()
 @dp.message_handler(commands=['start'])
 async def handle_message(message: types.Message):
     await start(message)
+
+
+lang = ''
 
 
 @dp.message_handler(lambda message: message.text == '🇺🇿 Uzbek')
@@ -132,8 +136,12 @@ async def handle_message(callback_query: types.CallbackQuery):
 async def handle_message(callback_query: types.CallbackQuery):
     if callback_query.data == 'ortga':
         await on_inline_button_click(callback_query)
+        await bot.delete_message(chat_id=callback_query.message.chat.id,
+                                 message_id=callback_query.message.message_id)
     elif callback_query.data == 'ortga_ru':
         await on_inline_button_click_ru(callback_query)
+        await bot.delete_message(chat_id=callback_query.message.chat.id,
+                                 message_id=callback_query.message.message_id)
 
 
 # '================================================================================================================='
